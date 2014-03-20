@@ -1,5 +1,6 @@
-function Cube (posx) {
+function Cube (posx,speed) {
 	this.posx = posx;	
+	this.speed = speed;
 }
 
 var cube = new Image ();
@@ -10,7 +11,6 @@ Cube.prototype = {
 	h: 160,
 	w: 128,
 	x: undefined,
-	speed: 17,
 	imgCube: cube
 
 }
@@ -48,4 +48,8 @@ Cube.prototype.hitTest = function (obj) {
 
   return (this.x+this.w > obj.x && this.x < obj.x+obj.w &&
         this.posy+this.h > obj.y && this.posy+(2/3)*this.h < obj.y+obj.h);
+}
+
+Cube.prototype.moarHard = function () {
+	this.speed += 5;
 }
