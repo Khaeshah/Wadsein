@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<style>
+		body {
+			margin: 0px;
+			padding: 0px;
+			overflow: hidden;
+			text-align: center;
+			background-color: #2F8E7F;
+		}
+	</style>
+	<script src="../requestAnimFrame.js"></script>
+	<script src="../Keyboard.js"></script>
+	<script src="Player.js"></script>
+	<script src="Cube.js"></script>
+	<script src="socket.io.min.js"></script>
+
+</head>
+<body>
+	<canvas id="myCanvas"></canvas>
+	<script>
+
+		var canvas = document.getElementById("myCanvas");
+		var context = canvas.getContext('2d');
+		canvas.style.backgroundColor = "#B0DA90";
+
+		window.onresize = function () {
+      		canvas.width = 992;
+      		canvas.height = window.innerHeight;
+     	}
+   		window.onresize();
+
+   		var socket = io.connect('http://localhost:4242');
+
+   		var players = {};
+
+		function generaEnemics(i) {
+			if (i === 0) {
+				return [new Cube(-1), undefined, new Cube(1)];
+			}
+			else if (i === 1) {
+				return [new Cube(-1), new Cube(0), undefined];
+			}
+			else if (i === 2) {
+				return [undefined, new Cube(0), new Cube(1)];
+			}
+			else return [undefined, new Cube(0), undefined];
+		}
+
+		
+   		socket.on('connect', function () {
+			socket.id = socket.socket.sessionid;
+		});
+
+		var keyboard = new KeyboardJS(false);
+		canvas.width = 992;
+		canvas.height = window.innerHeight;
+
+		var apretat = false;
+
+		// Agafar un dels 4 possibles enemics
+		var enemic = generaEnemics(Math.floor(Math.random()*4));
+		var imDead = false;
+
+		function logic (dt) {
+			var player = players[socket.id];
+
+			if (player !== undefined && !imDead) {
+
+
+				if (keyboard.char('A') && !apretat) {
+					socket.emit("moveA",player);
+					apretat = true;
+				}
+
+				else if (keyboard.char('D') && !apretat) {
+					socket.emit("moveD", player);
+					apretat = true;
+				}
+				if(apretat === false) socket.emit("posInicial",player);
+				
+				for(var i = 0; i < 3; ++i) {
+					if(enemic[i] !== undefined) {
+						if(enemic[i].posy >= canvas.height) {
+							delete enemic;
+							eViu = false;
+						}
+						if (enemic[i].hitTest(players[socket.id])) imDead = true;				
+					}
+				}
+				if(!eViu) {
+					player.score += 10;
+					enemic = generaEnemics(Math.floor(Math.random()*4));
+					eViu = true;
+				}
+			}
+			if(keyboard.char('R') && imDead) {
+				player.score = 0;
+				imDead = false;
+				enemic = generaEnemics(Math.floor(Math.random()*4));
+			}
+		}
+		var eViu = true;
+		function render (ctx) {
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+			if(!imDead) {
+
+				
+				for(var i = 0; i < 3; ++i) {
+					if(eViu && enemic[i] !== undefined) enemic[i].render(ctx);		
+				}
+				for (var obj in players) players[obj].render(ctx);
+				ctx.font = "20px Firasans";
+				ctx.fillStyle = "black";
+				ctx.fillText("Score: " + players[socket.id].score, canvas.width/2-112, 25);
+			}
+			else {
+				ctx.font = "50px Firasans";
+				ctx.fillStyle = "blue";
+				ctx.fillText("YOU ARE DEAD.", canvas.width/4-180,canvas.height/2);
+				ctx.font = "20px Firasans";
+				ctx.fillText("Total score: " + players[socket.id].score, canvas.width/4-50,canvas.height/2+30);
+				ctx.fillText("Press R to restart", canvas.width/2-160, canvas.height-20);
+			}
+			ctx.beginPath();
+			ctx.moveTo(canvas.width/2, canvas.height);
+			ctx.lineTo(canvas.width/2, 0);
+			ctx.stroke();
+		}
+
+		document.addEventListener("keyup", function(e) {
+			if(apretat) if(e.keyCode == 65 || e.keyCode == 68) apretat = false;
+		});
+
+		var oldDate = +new Date();
+
+		socket.on('playerUpdate', function (playerData) {
+			var player = players[playerData.id];
+			if (player === undefined) {
+				player = new Player (0,socket.id, canvas.height);
+				players[playerData.id] = player;
+				if(playerData.id === socket.id) requestAnimFrame(mainLoop);
+			}
+			player.updateWithPlayerData(playerData);
+		});
+
+		socket.on('playerDisconnect', function (playerId) {
+			delete players[playerId];
+		});
+
+		function mainLoop () {
+			requestAnimFrame(mainLoop);
+
+			var newDate = +new Date();
+			var delta = newDate - oldDate;
+			oldDate = newDate;
+
+			logic(delta);
+			render(context);
+		}		
+	</script>
+</body>
+</html>
