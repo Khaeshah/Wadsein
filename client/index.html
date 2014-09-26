@@ -106,19 +106,13 @@
 								if(cube_vel > 24) cube_vel = 24;
 							}
 							else if (dificultat === 4) {
-								cube_vel += 1.7;
+								cube_vel += 1.6;
 							}
 						}
 						enemic = generaEnemics(Math.floor(Math.random()*4));
 						eViu = true;
 					}
 				
-					if(keyboard.char('R') && imDead) {
-						cube_vel = 5;
-						player.score = 0;
-						imDead = false;
-						enemic = generaEnemics(Math.floor(Math.random()*4));
-					}
 				}
 				else {
 					if(keyboard.char('1')) dificultat = 1;
@@ -128,6 +122,12 @@
 					if(dificultat != 0) loginScreen = false;
 				}
 			}	
+			if(keyboard.char('R') && imDead) {
+				cube_vel = 5;
+				player.score = 0;
+				imDead = false;
+				enemic = generaEnemics(Math.floor(Math.random()*4));
+			}
 		}
 		var eViu = true;
 		var loginScreen = true;
