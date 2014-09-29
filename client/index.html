@@ -23,7 +23,8 @@
 
 		var canvas = document.getElementById("myCanvas");
 		var context = canvas.getContext('2d');
-		canvas.style.backgroundColor = "#B0DA90";
+		
+		//canvas.style.backgroundColor = "#B0DA90";
 
 		window.onresize = function () {
       		canvas.width = 992;
@@ -35,6 +36,11 @@
 
    		var players = {};
    		var cube_vel = 5;
+   		var background = new Image ();
+   		background.src = "img/background.jpg";
+
+   		var backgroundEspera = new Image ();
+   		backgroundEspera.src = "img/backgroundEspera.jpg";
 
 		function generaEnemics(i) {
 			if (i === 0) {
@@ -92,7 +98,7 @@
 					}
 					if(!eViu) {
 						player.score += 10;
-						if(player.score > 10) {
+						if(player.score > 0) {
 							if(dificultat === 1) {
 								cube_vel += 0.2;
 								if(cube_vel > 11) cube_vel = 11;
@@ -132,23 +138,29 @@
 		var eViu = true;
 		var loginScreen = true;
 
+		var loadBackground = false;
+
 		function render (ctx) {
 			if(!loginScreen) {
-				ctx.clearRect(0,0,canvas.width,canvas.height);
-				if(!imDead) {
+				
+				ctx.drawImage(background,0,0);
+				//ctx.clearRect(0,0,canvas.width,canvas.height);
+				/*if(!loadBackground) {
+					loadBackground = true;
+				}*/
 
-					
+				if(!imDead) {					
 					for(var i = 0; i < 3; ++i) {
 						if(eViu && enemic[i] !== undefined) enemic[i].render(ctx);		
 					}
 					for (var obj in players) players[obj].render(ctx);
 					ctx.font = "20px Firasans";
-					ctx.fillStyle = "black";
+					ctx.fillStyle = "white";
 					var length = 4;
 					var myString = cube_vel.toString();
 					var myTruncatedString = myString.substring(0,length);
 					ctx.fillText("Score: " + players[socket.id].score, canvas.width/2-112, 25);
-					ctx.fillText("Hold A and D to move", canvas.width/1.6, canvas.height/2);
+					ctx.fillText("Hold A and D to move", canvas.width/1.55, canvas.height/2);
 					ctx.fillText(myTruncatedString+" km/h", canvas.width/2+5, 25);
 				}
 				else {
@@ -161,6 +173,7 @@
 				}
 			}
 			else {
+				ctx.drawImage(backgroundEspera,0,0,992,canvas.height);
 				ctx.font = "50px Firasans";
 				ctx.fillStyle = "blue";
 				ctx.fillText("Select difficulty", canvas.width/4.5, canvas.height/3.5);
@@ -172,7 +185,10 @@
 			}
 			ctx.beginPath();
 			ctx.moveTo(canvas.width/2, canvas.height);
-			if(!loginScreen) ctx.lineTo(canvas.width/2, 0);
+			if(!loginScreen) {
+				ctx.strokeStyle = "#81BDD5";
+				ctx.lineTo(canvas.width/2, 0);
+			}
 			ctx.stroke();
 		}
 
